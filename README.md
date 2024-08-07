@@ -49,3 +49,56 @@ http://10.0.0.0:9090
 ### PromQL
 node_os_info or windows_os_info
 rate(node_network_receive_bytes_total[1m])
+
+### Установка Prometheus из архива
+```bash
+mkdir prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.54.0-rc.0/prometheus-2.54.0-rc.0.linux-amd64.tar.gz
+
+tar xvfz prometheus-2.54.0-rc.0.linux-amd64.tar.gz
+cd prometheus-2.54.0-rc.0.linux-amd64/
+# Удаляем ненужный мусор
+rm LICENSE 
+rm NOTICE 
+rm promtool
+rm rf console*
+rm -rf data/
+
+# Переносим исполняемый файл
+mv prometheus /usr/bin
+
+# Переносим конфиг приложения в /etc/prometheus/
+mkdir /etc/prometheus
+mv prometheus.yml /etc/prometheus/
+
+# Создаем отдельную УЗ и наделяем правами все содержимое /etc/prometheus/
+useradd -rs /bin/false prometheus
+chown -R prometheus:prometheus /etc/prometheus/
+mkdir /etc/prometheus/data
+
+# Теперь нужно поместить Prometheus в автозагрузку
+nano /etc/systemd/system/prometheus.service
+# Содержание:
+[Unit]
+Description=Prometheus Server
+After=network.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+Restart=on-failure
+ExecStart=/usr/bin/prometheus \
+  --config.file         /etc/prometheus/prometheus.yml \
+  --storage.tsdb.path   /etc/prometheus/data
+
+[Install]
+WantedBy=multi-user.target
+
+# Перезапускаем конфигурацию служб, чтобы наш файл подхватить
+systemctl daemon-reload
+systemctl start prometheus
+systemctl status prometheus
+
+systemctl enable prometheus
+```

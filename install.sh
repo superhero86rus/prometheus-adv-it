@@ -1,0 +1,53 @@
+#!/bin/bash
+PROMETHEUS_VERSION="2.54.0"
+PROMETHEUS_FOLDER_CONFIG="/etc/prometheus"
+PROMETHEUS_FOLDER_TSDATA="$PROMETHEUS_FOLDER_CONFIG/data"
+
+'cd /tmp'
+wget https://github.com/prometheus/prometheus/releases/download/v$PROMETHEUS_VERSION-rc.1/prometheus-$PROMETHEUS_VERSION-rc.1.linux-amd64.tar.gz
+tar xvzf prometheus-$PROMETHEUS_VERSION-rc.1.linux-amd64.tar.gz
+"cd prometheus-$PROMETHEUS_VERSION-rc.1.linux-amd64"
+mv prometheus /usr/bin
+rm -rf /tmp/prometheus*
+
+mkdir -p $PROMETHEUS_FOLDER_CONFIG
+mkdir -p $PROMETHEUS_FOLDER_TSDATA
+
+cat <<EOF> $PROMETHEUS_FOLDER_CONFIG/prometheus.yml
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+EOF
+
+useradd -rs /bin/false prometheus
+chown prometheus:prometheus /usr/bin/prometheus
+chown prometheus:prometheus $PROMETHEUS_FOLDER_CONFIG/prometheus.yml
+chown prometheus:prometheus $PROMETHEUS_FOLDER_TSDATA
+
+cat <<EOF> /etc/systemd/system/prometheus.service
+[Unit]
+Description=Prometheus Server
+After=network.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+Restart=on-failure
+ExecStart=/usr/bin/prometheus \
+  --config.file         ${PROMETHEUS_FOLDER_CONFIG}/prometheus.yml \
+  --storage.tsdb.path   ${PROMETHEUS_FOLDER_TSDATA}
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon reload
+systemctl start prometheus
+systemctl enable prometheus
+journalctl | grep prometheus
+prometheus --version
