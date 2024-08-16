@@ -77,7 +77,7 @@ chown -R prometheus:prometheus /etc/prometheus/
 mkdir /etc/prometheus/data
 
 # Теперь нужно поместить Prometheus в автозагрузку
-nano /etc/systemd/system/prometheus.service
+sudo nano /etc/systemd/system/prometheus.service
 # Содержание:
 [Unit]
 Description=Prometheus Server
@@ -99,6 +99,60 @@ WantedBy=multi-user.target
 systemctl daemon-reload
 systemctl start prometheus
 systemctl status prometheus
-
 systemctl enable prometheus
+
+# Автоматическая установка: chmod +x install.sh и выполнить его
+
+# Добавляем новые сервера под мониторинг, модифицируя prometheus.yml
+global:
+  scrape_interval: 10s 
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "ubuntu-servers"
+    static_configs:
+      - targets:
+          - 192.168.88.29:9100
+          - 192.168.88.30:9100
+
+# Установка Node Exporter
+wget https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
+tar xvfz node_exporter-1.8.2.linux-amd64.tar.gz
+cd node_exporter-1.8.2.linux-amd64
+mv node_exporter /usr/bin
+
+# -rs Системный пользователь, без логина
+useradd -rs /bin/false node_exporter
+chown node_exporter:node_exporter /usr/bin/node_exporter
+
+sudo nano /etc/systemd/system/node_exporter.service
+# Содержание:
+[Unit]
+Description=Prometheus Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+Restart=on-failure
+ExecStart=/usr/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+
+# Включаем
+systemctl daemon-reload
+systemctl start node_exporter
+systemctl status node_exporter
+systemctl enable node_exporter
+
+# Автоматическая установка - node_exporter.sh
+scp /home/superhero86/Documents/source/prometheus-adv-it/node_exporter.sh root@ubuntuserver2:~
+ssh root@ubuntuserver2
+chmod +x node_exporter.sh
+./node_exporter.sh
 ```

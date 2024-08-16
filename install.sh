@@ -3,10 +3,10 @@ PROMETHEUS_VERSION="2.54.0"
 PROMETHEUS_FOLDER_CONFIG="/etc/prometheus"
 PROMETHEUS_FOLDER_TSDATA="$PROMETHEUS_FOLDER_CONFIG/data"
 
-'cd /tmp'
+cd /tmp
 wget https://github.com/prometheus/prometheus/releases/download/v$PROMETHEUS_VERSION-rc.1/prometheus-$PROMETHEUS_VERSION-rc.1.linux-amd64.tar.gz
 tar xvzf prometheus-$PROMETHEUS_VERSION-rc.1.linux-amd64.tar.gz
-"cd prometheus-$PROMETHEUS_VERSION-rc.1.linux-amd64"
+cd prometheus-$PROMETHEUS_VERSION-rc.1.linux-amd64
 mv prometheus /usr/bin
 rm -rf /tmp/prometheus*
 
@@ -46,7 +46,7 @@ ExecStart=/usr/bin/prometheus \
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon reload
+systemctl daemon-reload
 systemctl start prometheus
 systemctl enable prometheus
 journalctl | grep prometheus
