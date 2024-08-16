@@ -188,5 +188,36 @@ scrape_configs:
 # sudo systemctl restart prometheus
 # https://github.com/prometheus-community/windows_exporter/releases/download/v0.27.1/windows_exporter-0.27.1-amd64.msi
 # http://192.168.88.25:9182/metrics
+# Автоматическая установка - InstallWindowsExporter.ps1
+```
 
+### Grafana
+
+```bash
+# Все важные конфиг файлы хранятся в /etc/grafana
+# Prometheus Datasource настраивается в /etc/grafana/provisioning/datasources/prometheus.yml
+# Инсталяционная директория графаны - /usr/share/grafana
+# Данные и дашборды хранятся в /var/lib/grafana/grafana.db
+# Grafana работает на порту 3000, admin/admin
+
+# Установка из репозитория
+sudo apt-get install -y apt-transport-https software-properties-common wget
+sudo mkdir -p /etc/apt/keyrings/
+wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+sudo apt-get update
+
+# Автоматическая установка
+# sudo apt-get install grafana
+
+# Но мы скачаем и установим вручную
+sudo apt-get install -y adduser libfontconfig1 musl
+wget https://dl.grafana.com/oss/release/grafana_11.1.4_amd64.deb
+sudo dpkg -i grafana_11.1.4_amd64.deb
+sudo /bin/systemctl daemon-reload
+sudo /bin/systemctl enable grafana-server
+systemctl start grafana-server
+
+# Автоматическая установка скриптом install_grafana.sh
+scp /home/superhero86/Documents/source/prometheus-adv-it/node_exporter.sh root@ubuntuserver2:~
 ```
