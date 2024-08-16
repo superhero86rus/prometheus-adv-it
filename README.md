@@ -102,7 +102,11 @@ systemctl status prometheus
 systemctl enable prometheus
 
 # Автоматическая установка: chmod +x install.sh и выполнить его
+```
 
+### Node Exporter
+
+```bash
 # Добавляем новые сервера под мониторинг, модифицируя prometheus.yml
 global:
   scrape_interval: 10s 
@@ -155,4 +159,34 @@ scp /home/superhero86/Documents/source/prometheus-adv-it/node_exporter.sh root@u
 ssh root@ubuntuserver2
 chmod +x node_exporter.sh
 ./node_exporter.sh
+```
+
+### Windows Exporter
+
+```bash
+# По умолчанию, Windows Exporter экспортирует данные на порту 9182
+# Правим конфиг
+global:
+  scrape_interval: 10s 
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "ubuntu-servers"
+    static_configs:
+      - targets:
+          - 192.168.88.29:9100
+          - 192.168.88.30:9100
+  
+  - job_name: "windows-servers"
+    static_configs:
+      - targets:
+          - 192.168.88.25:9182
+
+# sudo systemctl restart prometheus
+# https://github.com/prometheus-community/windows_exporter/releases/download/v0.27.1/windows_exporter-0.27.1-amd64.msi
+# http://192.168.88.25:9182/metrics
+
 ```
